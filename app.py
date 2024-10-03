@@ -22,7 +22,7 @@ def get_chatgpt_response(prompt):
         response = openai.ChatCompletion.create(
             model="gpt-4o-mini",
             messages=[{"role": "user", "content": prompt}],
-            max_tokens=10000
+            max_tokens=12000
         )
         return response['choices'][0]['message']['content']
     except Exception as e:
@@ -36,30 +36,32 @@ def index():
 @app.route('/process', methods=['POST'])
 def process_video_id():
     video_id = request.form["video_id"] 
-
+    debate_name=request.form["debate_name"]
 
     
     if not video_id:
         return jsonify({'output': 'No video ID provided'}), 400
-    
-    print(f"Received video ID: {video_id}")
-    
+    if not debate_name:
+        return jsonify({'output': 'No debate name provided'}), 400
     transcript_text = get_transcript_text_only(video_id)
     
     if transcript_text is None:
         return jsonify({'output': f'Failed to fetch transcript for video ID: {video_id}'}), 500
+    if debate_name is None:
+        return jsonify({'output': f'Failed to fetch debate name: {debate_name}'}), 500
     
-    # ChatGPT prompt
-    instruction = ("Imagine you are a fact check for the 2024 Donald Trump vs Kamala Harris Debate. Analyze the transcript provided completely and look for groups of sentences that form complete ideas. Using your knowledge, check if these complete ideas are true or false. If you determine that any statements are opinions or general statements, ignore them and don't return them. Only return the complete ideas that are true or false in this format: 'Trump or Harris - Sentences that make the complete idea (True or False with explanation)'.")
+    # Instruction with addition of debate name from user
+    instruction = ("Imagine you are a fact check for the " + debate_name + " Debate. Analyze the transcript provided completely and look for groups of sentences that form complete ideas. Using your knowledge, check if these complete ideas are true or false. If you determine that any statements are opinions or general statements, ignore them and don't return them. Only return the complete ideas that are true or false in this format: 'Speaker from " + debate_name + " - Sentences that make the complete idea (True or False with explanation)'.")
     
+
     prompt = f"{instruction}\n'{transcript_text}'"
     
+    #Adding response to csv file
     chatgpt_response = get_chatgpt_response(prompt)
-    with open('responses.csv', mode='w', newline='') as file:
+    with open('responses.csv', mode='a', newline='') as file:
         writer = csv.writer(file)
-        
-        # Write a row for each segment and its response
         writer.writerow([video_id, chatgpt_response])
+
     
     return jsonify({'output': chatgpt_response})
 

@@ -26,6 +26,7 @@
             padding: 10px;
             width: 80%;
             margin-bottom: 10px;
+            text-align:center;
         }
         button {
             padding: 10px 20px;
@@ -72,12 +73,16 @@
 
 <div class="container">
     <h1>Video ID Processor</h1>
+    <br>
     <form action = "/process" id="videoForm" method="POST">
+        <!--Gets name of debate in format of year and speakers-->
+        <input type="text" id="debate_name" name="debate_name" placeholder = "Enter Debate (i.e 2024 Kamala Harris vs Donald Trump)" required>
+        <!--Gets video id-->
         <input type="text" id="video_id" name="video_id" placeholder="Enter Video ID" required>
+        <br>
         <button type="submit">Submit</button>
     </form>
     
-    <!-- Container for the YouTube video -->
     <div id="videoContainer"></div>
 
     <!-- Display ChatGPT result -->
@@ -88,9 +93,11 @@
     document.getElementById('videoForm').addEventListener('submit', function(e) {
         e.preventDefault();
         var videoID = document.getElementById('video_id').value;
+        var DebateName = document.getElementById('debate_name').value;
 
         // Log videoID for debugging
         console.log("Video ID:", videoID);
+        console.log("Debate Name:", DebateName);
         
         // Embed the YouTube video using the provided video ID
         var videoEmbedUrl = 'https://www.youtube.com/embed/' + videoID;
@@ -100,6 +107,7 @@
         // Send the video ID to the backend for processing
         let formData = new URLSearchParams();
         formData.append('video_id', videoID);
+        formData.append('debate_name', DebateName);
         
         fetch('/process', {
             method: 'POST',
